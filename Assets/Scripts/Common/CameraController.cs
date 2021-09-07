@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using TMPro;
+using UnityEngine;
 
 namespace ARWT.Core{
     public class CameraController : MonoBehaviour{
@@ -6,12 +8,21 @@ namespace ARWT.Core{
         Matrix4x4 defProj;
         Camera cam;
 
+        bool isCameraReady;
+
         [System.Obsolete]
-        void Start() {
+        IEnumerator Start() {
             cam = GetComponent<Camera>();
             Application.ExternalCall("cameraReady");
             
             defProj = cam.projectionMatrix;
+            yield return new WaitUntil(() => isCameraReady);
+            Debug.Log($"Camera is ready {isCameraReady}");
+            //Application.ExternalCall("requestGeolocationPermission");
+            //Application.ExternalCall("requestGyroscopePermission");
+            //Application.ExternalCall("requestAccelerometerPermission");
+            //Application.ExternalCall("registerDeviceMotion");
+            //Application.ExternalCall("registerDeviceOrientation");
         }
 
         public void Update(){
@@ -19,6 +30,19 @@ namespace ARWT.Core{
                 print("fov : " + cam.fieldOfView);
                 print("aspect : " + cam.aspect);
             }
+        }
+
+        public void Handle_DeviceOrientation()
+        {
+            Debug.Log($"Handle_DeviceOrientation");
+
+        }
+
+        public void Handle_CameraReady(string val)
+        {
+            // Work!
+            isCameraReady = bool.Parse(val);
+            //Debug.Log($"Camera is ready {isCameraReady}");
         }
 
         public void setFov(float val){

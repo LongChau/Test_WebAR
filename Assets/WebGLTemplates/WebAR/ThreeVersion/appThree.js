@@ -104,6 +104,7 @@ onRenderFcts.push(function(){
 
 //3d els ------------------------------------------------------
 
+// Create a box geometry and material
 var geometry = new THREE.BoxGeometry( 1, 1, 1 );
 var material = new THREE.MeshNormalMaterial({
     transparent : true,
@@ -111,6 +112,7 @@ var material = new THREE.MeshNormalMaterial({
     side: THREE.DoubleSide
 });
 
+// Combine box geometry and material to create a cube
 var cube = new THREE.Mesh( geometry, material );
 
 // cube.position.x = 6;
