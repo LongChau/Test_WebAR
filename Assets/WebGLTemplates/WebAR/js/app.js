@@ -3,6 +3,44 @@ let isCameraReady = false;
 let isDetectionManagerReady = false;
 let gl = null;
 const navigator = window.navigator;
+var scene = new THREE.Scene();
+// Require outside library quaternion.
+//var Quaternion = requirejs(['quaternion']);
+//var Quaternion = import("quaternion");
+//import QuaternionLib from "./lib/quaternion.js";
+var rad = Math.PI / 180;
+var quat = new Quaternion(1, 0, 0, 0);
+var quatConverted = Quaternion.fromEuler(45, 60, 20, 'XYZ');
+console.log(quatConverted.toString());
+
+function createSimpleCube() {
+    console.log("createSimpleCube()");
+
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+
+    //var sceneEl = document.querySelector('a-scene');
+    //sceneEl.appendChild(cube);
+
+    //// Create a box geometry and material
+    //var geometry = new THREE.BoxGeometry(5, 5, 5);
+    //var material = new THREE.MeshNormalMaterial({
+    //    transparent: false,
+    //    opacity: 1,
+    //    side: THREE.DoubleSide
+    //});
+
+    //// Combine box geometry and material to create a cube
+    //var cube = new THREE.Mesh(geometry, material);
+
+    // cube.position.x = 0;
+    // cube.position.y = 4;
+    // cube.position.z = -13;
+
+    //scene.add(cube);
+}
 
 function cameraReady(){
     isCameraReady = true;
@@ -34,18 +72,24 @@ function registerDeviceOrientation() {
     if (window.DeviceOrientationEvent) {
         window.addEventListener("deviceorientation", function (event) {
             // alpha: rotation around z-axis
-            var rotateDegrees = event.alpha;
-            // gamma: left to right
-            var leftToRight = event.gamma;
-            // beta: front back motion
-            var frontToBack = event.beta;
-            handleOrientationEvent(frontToBack, leftToRight, rotateDegrees);
+            var alpha = event.alpha;
+            // gamma: left to right - y
+            var gamma = event.gamma;
+            // beta: front back motion - x
+            var beta = event.beta;
+            var absolute = event.absolute;
+            //var webkitCompassHeading = event.webkitCompassHeading;
+            //var webkitCompassAccuracy = event.webkitCompassAccuracy;
+            //var quaternionConverted = Quaternion.fromEuler(beta * rad, gamma * rad, alpha * rad, 'XYZ');
+            //console.log(quaternionConverted.toString());
+            handleOrientationEvent(beta, gamma, alpha);
         }, true);
     }
 
-    var handleOrientationEvent = function (frontToBack, leftToRight, rotateDegrees) {
+    var handleOrientationEvent = function (beta, gamma, alpha) {
         // do something amazing
-        const msg = `${rotateDegrees.toString()},${leftToRight.toString()},${frontToBack.toString()}`;
+        //const msg = `${alpha.toString()},${gamma.toString()},${beta.toString()},${adsolute.toString()},${webkitCompassHeading.toString()},${webkitCompassAccuracy.toString()},${quaternionConverted.x.toString()},${quaternionConverted.y.toString()},${quaternionConverted.z.toString()},${quaternionConverted.w.toString()}`;
+        const msg = `${alpha.toString()},${gamma.toString()},${beta.toString()}`;
         unityInstance.SendMessage("Gyroscope", "Handle_DeviceOrientation", msg);
     };
 
@@ -164,9 +208,11 @@ function useGyroscope() {
 function handleReading(event) {
     console.log("handleReading()");
     console.log("event " + JSON.stringify(event));
-    console.log("alpha-x " + gyroscope.x);
-    console.log("beta-y " + gyroscope.y);
-    console.log("gamma-z " + gyroscope.z);
+    console.log("beta-x " + gyroscope.x);
+    console.log("gamma-y " + gyroscope.y);
+    console.log("alpha-z " + gyroscope.z);
+    const msg = `${gyroscope.x.toString()},${gyroscope.y.toString()},${gyroscope.z.toString()}`;
+    unityInstance.SendMessage("Gyroscope", "Handle_DeviceOrientation", msg);
 }
 
 // Work!

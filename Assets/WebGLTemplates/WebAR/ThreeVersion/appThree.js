@@ -194,7 +194,7 @@ onRenderFcts.push(function(){
         unityInstance.SendMessage("Main Camera", "setAspect", camera.aspect);
 
         unityInstance.SendMessage("Main Camera", "setPosition", posCam);
-        unityInstance.SendMessage("Main Camera", "setRotation", rotCam);
+        //unityInstance.SendMessage("Main Camera", "setRotation", rotCam);
     }
 
 

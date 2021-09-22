@@ -10,6 +10,8 @@ namespace ARWT.Core{
 
         bool isCameraReady;
 
+        public TextMeshProUGUI txtCamInfo;
+
         [System.Obsolete]
         IEnumerator Start() {
             cam = GetComponent<Camera>();
@@ -19,10 +21,8 @@ namespace ARWT.Core{
             yield return new WaitUntil(() => isCameraReady);
             Debug.Log($"Camera is ready {isCameraReady}");
             //Application.ExternalCall("requestGeolocationPermission");
-            //Application.ExternalCall("requestGyroscopePermission");
+            Application.ExternalCall("requestGyroscopePermission");
             //Application.ExternalCall("requestAccelerometerPermission");
-            //Application.ExternalCall("registerDeviceMotion");
-            //Application.ExternalCall("registerDeviceOrientation");
         }
 
         public void Update(){
@@ -30,7 +30,11 @@ namespace ARWT.Core{
                 print("fov : " + cam.fieldOfView);
                 print("aspect : " + cam.aspect);
             }
+
+            txtCamInfo.SetText($"Cam pos: {transform.position}, rot: {transform.rotation}");
         }
+
+
 
         public void Handle_DeviceOrientation()
         {
@@ -117,5 +121,11 @@ namespace ARWT.Core{
             transform.eulerAngles = new Vector3(x, y, z);
         }
 
+        [ContextMenu("Rotate")]
+        void Test_Rotate()
+        {
+            //_camCtrl.transform.localRotation *= Quaternion.Euler(20f, 0f, 0f);
+            transform.localRotation *= new Quaternion(0.2f, 0f, 0f, 1f);
+        }
     }
 }

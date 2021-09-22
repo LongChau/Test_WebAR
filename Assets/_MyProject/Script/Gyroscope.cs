@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using ARWT.Core;
+using ARWT.Marker;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using TMPro;
@@ -15,11 +17,19 @@ namespace WebAR.Gyroscope
         public TextMeshProUGUI _txtOrientation;
         public TextMeshProUGUI _txtInfo;
         public TextMeshProUGUI _txtDirection;
+        public TextMeshProUGUI _txtNorthpoleValue;
 
         public Image _splashImg;
 
+        public Vector3 fakePosition = new Vector3(0f, 0f, -5f);
+
         [Space]
         public FireworkControl _fireworkCtrl;
+
+        public GenericController genericController;
+
+        public CameraController _camCtrl;
+        public Transform _camContainer;
 
         private enum Direction
         {
@@ -35,13 +45,22 @@ namespace WebAR.Gyroscope
         public float updateSpeed = 10;
         public float positionThreshold = 0;
 
+        bool isGetOrientation;
+
         // Should be placed in Plugins folder...
-        //#region JS functions
+        #region JS functions
         //[DllImport("__Internal")]
         //private static extern void registerDeviceMotion();
         //[DllImport("__Internal")]
         //private static extern void registerDeviceOrientation();
-        //#endregion
+        #endregion
+
+        //public void AddX() => fakePosition.Add(new Vector3(1f, 0f, 0f));
+        //public void AddY() => fakePosition.Add(new Vector3(0f, 1f, 0f));
+        //public void AddZ() => fakePosition.Add(new Vector3(0f, 0f, 1f));
+        //public void SubtractX() => fakePosition.Add(new Vector3(0f, 0f, -1f));
+        //public void SubtractY() => fakePosition.Add(new Vector3(0f, -1f, 0f));
+        //public void SubtractZ() => fakePosition.Add(new Vector3(-1f, 0f, 0f));
 
         // Start is called before the first frame update
         [System.Obsolete]
@@ -53,13 +72,21 @@ namespace WebAR.Gyroscope
             //    _txtGyro.SetText($"Gyroscope does not support.");
             //}
 
+            Input.location.Start();
+            Input.gyro.enabled = true;
+            Input.compass.enabled = true;
+
             _txtGyro.SetText($"Waiting for checking gyro...");
 
             Application.ExternalCall("registerDeviceMotion");
             Application.ExternalCall("registerDeviceOrientation");
+            //Application.ExternalCall("requestGyroscopePermission");
+            //Application.ExternalCall("createSimpleCube");
 
             //registerDeviceMotion();
             //registerDeviceOrientation();
+
+            //_camContainer.transform.rotation = Quaternion.Euler(90f, 90f, 0f);
         }
 
         public void Handle_DeviceMotion(string infos)
@@ -75,18 +102,39 @@ namespace WebAR.Gyroscope
             _txtMotion.SetText(info);
         }
 
+        Quaternion _orientationValues;
         public void Handle_DeviceOrientation(string infos)
         {
+            isGetOrientation = true;
+
             //Debug.Log($"Handle_DeviceOrientation({infos})");
             string[] datas = infos.Split(","[0]);
             //Debug.Log($"datas: {datas}");
             float z = float.Parse(datas[0]);
-            float x = float.Parse(datas[1]);
-            float y = float.Parse(datas[2]);
-            string info = $"alpha: {z}, beta: {x}, gamma: {y}";
+            float y = float.Parse(datas[1]);
+            float x = float.Parse(datas[2]);
+            //float absolute = float.Parse(datas[3]);
+            //float webkitCompassHeading = float.Parse(datas[4]);
+            //float webkitCompassAccuracy = float.Parse(datas[5]);
+            //float quaternionX = float.Parse(datas[6]);
+            //float quaternionY = float.Parse(datas[7]);
+            //float quaternionZ = float.Parse(datas[8]);
+            //float quaternionW = float.Parse(datas[9]);
+            //Quaternion quaternion = new Quaternion(quaternionX, quaternionY, quaternionZ, quaternionW);
+            string info = $" beta: {x}, gamma: {y}, alpha: {z}";
+                //$"absolute: {absolute}" +
+                //$"webkitCompassHeading: {webkitCompassHeading}" +
+                //$"webkitCompassAccuracy: {webkitCompassAccuracy}";
+                //$"quaternionX: {quaternionX}" +
+                //$"quaternionY: {quaternionY}" +
+                //$"quaternionZ: {quaternionZ}" +
+                //$"quaternionW: {quaternionW}";
             //Debug.Log(info);
             _txtOrientation.SetText(info);
 
+            //_orientationValues = new Vector3(x, y, z);
+            //_orientationValues = quaternion;
+            _orientationValues = Quaternion.Euler(x, y, z);
             // 80 <= gamma <= 120
             bool faceNorth = (z.IsBetweenInclusive(0f, 30f) || z.IsBetweenInclusive(330f, 360f)) &&
                 y.IsBetweenInclusive(80f, 120f) && !x.IsBetweenInclusive(-5f, 5f);
@@ -96,42 +144,43 @@ namespace WebAR.Gyroscope
             if (faceNorth)
             {
                 OnFaceNorth();
+                _txtDirection.SetText(_direction.ToString());
             }
             else
             {
-
+                _txtDirection.SetText("Not facing north.");
+                //MarkerInfo fakeMarker = new MarkerInfo(
+                //    "Nutty", true,
+                //    _fireworkCtrl.transform.position,
+                //    _fireworkCtrl.transform.rotation,
+                //    _fireworkCtrl.transform.localScale);
+                //genericController.FakeMarkerLost(fakeMarker);
             }
-
-            _txtDirection.SetText(_direction.ToString());
         }
 
+        bool _isFirstTime = true;
         void OnFaceNorth()
         {
             _direction = Direction.North;
-            //_fireworkCtrl.PlayFirework();
 
-            //if (!_firstTime)
+            //MarkerInfo fakeMarker = new MarkerInfo(
+            //    "Nutty", true,
+            //    _fireworkCtrl.transform.position,
+            //    _fireworkCtrl.transform.rotation,
+            //    _fireworkCtrl.transform.localScale);
+            //genericController.FakeMarkerVisible(fakeMarker);
+            //if (_isFirstTime)
             //{
-            //    if (Vector3.Distance(_fireworkCtrl.transform.position, transform.position) > positionThreshold)
-            //    {
-            //        transform.position = Vector3.Lerp(transform.position, _fireworkCtrl.transform.position, Time.deltaTime * updateSpeed);
-            //    }
+            //    //var newPos = _camCtrl.transform.position;
+            //    //newPos.z = 20f;
+            //    //_fireworkCtrl.transform.position = newPos;
+            //    _fireworkCtrl.transform.position = new Vector3(
+            //        _fireworkCtrl.transform.position.x,
+            //        Input.acceleration.y + 5f, 
+            //        _fireworkCtrl.transform.position.z);
+            //    _fireworkCtrl.PlayFirework();
+            //    _isFirstTime = false;
             //}
-            //else
-            //{
-            //    transform.position = _fireworkCtrl.transform.position;
-            //    _firstTime = false;
-            //}
-
-            //transform.rotation = _fireworkCtrl.transform.rotation;
-
-            //Vector3 absScale = new Vector3(
-            //    Mathf.Abs(_fireworkCtrl.transform.scale.x),
-            //    Mathf.Abs(_fireworkCtrl.transform.scale.y),
-            //    Mathf.Abs(_fireworkCtrl.transform.scale.z)
-            //);
-
-            //transform.localScale = absScale;
         }
 
         //void OnFaceAnotherDirection()
@@ -145,6 +194,7 @@ namespace WebAR.Gyroscope
         //    }
         //}
 
+        Vector3 _accelerometorValues;
         public void Handle_Accelerometer(string infos)
         {
             Debug.Log($"Handle_Accelerometer({infos})");
@@ -156,15 +206,24 @@ namespace WebAR.Gyroscope
             string info = $"posX: {posX}, posY: {posY}, posZ: {posZ}";
             //Debug.Log(info);
             _txtGyro.SetText(info);
+            _accelerometorValues = new Vector3(posX, posY, posZ);
         }
 
         // Update is called once per frame
         void Update()
         {
-            if (SystemInfo.supportsGyroscope)
+            //_camCtrl.transform.Translate(Input.acceleration.x, Input.acceleration.y, -Input.acceleration.z);
+            //_camCtrl.transform.Translate(_accelerometorValues.x, _accelerometorValues.y, -_accelerometorValues.z);
+            //_camCtrl.transform.eulerAngles = _orientationValues;
+            //Input.gyro.enabled = true;
+            //_camCtrl.transform.localRotation = Input.gyro.attitude * new Quaternion(0f, 0f, 1f, 0f);
+
+            _txtNorthpoleValue.SetText($"North pole value: {Input.compass.magneticHeading}");
+            
+            if (isGetOrientation)
             {
-                Debug.Log("This device supports gyroscope");
-                _txtGyro.SetText($"Attitude: {Input.gyro.attitude} gravity: {Input.gyro.gravity}");
+                _camCtrl.transform.localRotation = _orientationValues;
+                //_camCtrl.transform.localRotation = _orientationValues * new Quaternion(0f, 0f, 1f, 0f);
             }
         }
     }
