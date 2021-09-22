@@ -15,14 +15,19 @@ namespace ARWT.Core{
         [System.Obsolete]
         IEnumerator Start() {
             cam = GetComponent<Camera>();
+#if UNITY_WEBGL
             Application.ExternalCall("cameraReady");
-            
+#else
+            isCameraReady = true;
+#endif
             defProj = cam.projectionMatrix;
             yield return new WaitUntil(() => isCameraReady);
             Debug.Log($"Camera is ready {isCameraReady}");
+#if UNITY_WEBGL
             //Application.ExternalCall("requestGeolocationPermission");
             Application.ExternalCall("requestGyroscopePermission");
-            //Application.ExternalCall("requestAccelerometerPermission");
+            //Application.ExternalCall("requestAccelerometerPermission");\
+#endif
         }
 
         public void Update(){

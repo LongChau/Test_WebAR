@@ -78,15 +78,20 @@ namespace WebAR.Gyroscope
 
             _txtGyro.SetText($"Waiting for checking gyro...");
 
+#if UNITY_WEBGL
             Application.ExternalCall("registerDeviceMotion");
             Application.ExternalCall("registerDeviceOrientation");
             //Application.ExternalCall("requestGyroscopePermission");
             //Application.ExternalCall("createSimpleCube");
+#endif
 
             //registerDeviceMotion();
             //registerDeviceOrientation();
-
-            //_camContainer.transform.rotation = Quaternion.Euler(90f, 90f, 0f);
+#if UNITY_IOS
+            _camCtrl.transform.SetParent(_camContainer);
+            _camContainer.rotation = Quaternion.Euler(90f, 90f, 0f);
+            isGetOrientation = true;
+#endif
         }
 
         public void Handle_DeviceMotion(string infos)
@@ -216,15 +221,18 @@ namespace WebAR.Gyroscope
             //_camCtrl.transform.Translate(_accelerometorValues.x, _accelerometorValues.y, -_accelerometorValues.z);
             //_camCtrl.transform.eulerAngles = _orientationValues;
             //Input.gyro.enabled = true;
-            //_camCtrl.transform.localRotation = Input.gyro.attitude * new Quaternion(0f, 0f, 1f, 0f);
 
+#if UNITY_IOS
+            _camCtrl.transform.localRotation = Input.gyro.attitude * new Quaternion(0f, 0f, 1f, 0f);
             _txtNorthpoleValue.SetText($"North pole value: {Input.compass.magneticHeading}");
-            
+            _txtGyro.SetText(Input.gyro.attitude.ToString());
+#else
             if (isGetOrientation)
             {
                 _camCtrl.transform.localRotation = _orientationValues;
                 //_camCtrl.transform.localRotation = _orientationValues * new Quaternion(0f, 0f, 1f, 0f);
             }
+#endif
         }
     }
 }
