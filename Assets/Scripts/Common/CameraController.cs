@@ -132,5 +132,15 @@ namespace ARWT.Core{
             //_camCtrl.transform.localRotation *= Quaternion.Euler(20f, 0f, 0f);
             transform.localRotation *= new Quaternion(0.2f, 0f, 0f, 1f);
         }
+
+        [ContextMenu("Rotate")]
+        public bool IsUpperCam(float degree)
+        {
+            var currentDegree = Vector3.Angle(transform.forward, Vector3.up);
+            bool result = Vector3.Angle(transform.forward, Vector3.up) <= degree;
+            //bool result = Quaternion.FromToRotation(transform.forward, Vector3.up).eulerAngles.x >= degree;
+            Debug.Log($"{currentDegree} IsUpperCam " + result);
+            return result;
+        }
     }
 }

@@ -12,6 +12,8 @@ namespace WebAR.Gyroscope
 {
     public class Gyroscope : MonoBehaviour
     {
+        public Canvas _canvasCompass;
+        public Image _imgCompass;
         public TextMeshProUGUI _txtGyro;
         public TextMeshProUGUI _txtMotion;
         public TextMeshProUGUI _txtOrientation;
@@ -20,6 +22,8 @@ namespace WebAR.Gyroscope
         public TextMeshProUGUI _txtNorthpoleValue;
 
         public Image _splashImg;
+
+        public Transform _light;
 
         public Vector3 fakePosition = new Vector3(0f, 0f, -5f);
 
@@ -87,10 +91,12 @@ namespace WebAR.Gyroscope
 
             //registerDeviceMotion();
             //registerDeviceOrientation();
+
 #if UNITY_IOS
             _camCtrl.transform.SetParent(_camContainer);
             _camContainer.rotation = Quaternion.Euler(90f, 90f, 0f);
             isGetOrientation = true;
+            _light.gameObject.SetActive(true);
 #endif
         }
 
@@ -214,6 +220,8 @@ namespace WebAR.Gyroscope
             _accelerometorValues = new Vector3(posX, posY, posZ);
         }
 
+        bool isPlayedFirework = false;
+        bool isFacingNorth = false;
         // Update is called once per frame
         void Update()
         {
@@ -221,11 +229,19 @@ namespace WebAR.Gyroscope
             //_camCtrl.transform.Translate(_accelerometorValues.x, _accelerometorValues.y, -_accelerometorValues.z);
             //_camCtrl.transform.eulerAngles = _orientationValues;
             //Input.gyro.enabled = true;
-
 #if UNITY_IOS
             _camCtrl.transform.localRotation = Input.gyro.attitude * new Quaternion(0f, 0f, 1f, 0f);
             _txtNorthpoleValue.SetText($"North pole value: {Input.compass.magneticHeading}");
             _txtGyro.SetText(Input.gyro.attitude.ToString());
+            bool isFacingNorth = (Input.compass.magneticHeading.IsBetweenInclusive(0, 5) ||
+                Input.compass.magneticHeading.IsBetweenInclusive(355, 360));
+            if (isFacingNorth && _camCtrl.IsUpperCam(70) && !isPlayedFirework)
+            {
+                // Show firework there.
+                _fireworkCtrl.transform.position = _camCtrl.transform.forward * 20f;
+                _fireworkCtrl.PlayFirework();
+                isPlayedFirework = true;
+            }
 #else
             if (isGetOrientation)
             {
@@ -233,6 +249,18 @@ namespace WebAR.Gyroscope
                 //_camCtrl.transform.localRotation = _orientationValues * new Quaternion(0f, 0f, 1f, 0f);
             }
 #endif
+            // For camera outside the camera container.
+            //var magneticDegree = Input.compass.magneticHeading;
+            //Quaternion newRotation = Quaternion.Euler(_canvasCompass.transform.eulerAngles.x, _camCtrl.transform.localEulerAngles.y, magneticDegree);
+            //_imgCompass.transform.rotation = Quaternion.Lerp(_imgCompass.transform.rotation, newRotation, 5f * Time.deltaTime);
+
+            var magneticDegree = Input.compass.magneticHeading;
+            Quaternion newRotation = Quaternion.Euler(0, 0, magneticDegree);
+            _imgCompass.transform.localRotation = Quaternion.Lerp(_imgCompass.transform.localRotation, newRotation, 5f * Time.deltaTime);
         }
+
+        [ContextMenu("ToggleFacingNorth")]
+        private void FacingNorth() => isFacingNorth = !isFacingNorth;
+
     }
 }
