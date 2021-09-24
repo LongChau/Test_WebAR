@@ -1,4 +1,4 @@
-const unityInstance = UnityLoader.instantiate("unityContainer", "%UNITY_WEBGL_BUILD_URL%");  
+﻿const unityInstance = UnityLoader.instantiate("unityContainer", "%UNITY_WEBGL_BUILD_URL%");  
 let isCameraReady = false;
 let isDetectionManagerReady = false;
 let gl = null;
@@ -8,10 +8,13 @@ var scene = new THREE.Scene();
 //var Quaternion = requirejs(['quaternion']);
 //var Quaternion = import("quaternion");
 //import QuaternionLib from "./lib/quaternion.js";
-var rad = Math.PI / 180;
-var quat = new Quaternion(1, 0, 0, 0);
-var quatConverted = Quaternion.fromEuler(45, 60, 20, 'XYZ');
-console.log(quatConverted.toString());
+//var rad = Math.PI / 180;
+//var quat = new Quaternion(1, 0, 0, 0);
+//var quatConverted = Quaternion.fromEuler(45, 60, 20, 'XYZ');
+//console.log(quatConverted.toString());
+
+var test = THREE.MathUtils.degToRad(90);
+console.log(test.toString());
 
 function createSimpleCube() {
     console.log("createSimpleCube()");
@@ -20,26 +23,6 @@ function createSimpleCube() {
     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     const cube = new THREE.Mesh(geometry, material);
     scene.add(cube);
-
-    //var sceneEl = document.querySelector('a-scene');
-    //sceneEl.appendChild(cube);
-
-    //// Create a box geometry and material
-    //var geometry = new THREE.BoxGeometry(5, 5, 5);
-    //var material = new THREE.MeshNormalMaterial({
-    //    transparent: false,
-    //    opacity: 1,
-    //    side: THREE.DoubleSide
-    //});
-
-    //// Combine box geometry and material to create a cube
-    //var cube = new THREE.Mesh(geometry, material);
-
-    // cube.position.x = 0;
-    // cube.position.y = 4;
-    // cube.position.z = -13;
-
-    //scene.add(cube);
 }
 
 function cameraReady(){
@@ -59,6 +42,7 @@ function createUnityMatrix(el){
 }
 
 //---Register functions
+// Device Motion
 function registerDeviceMotion() {
     window.addEventListener('devicemotion', function (event) {
         //console.log(event.acceleration.x + ' m/s2');
@@ -68,32 +52,98 @@ function registerDeviceMotion() {
     });
 }
 
+// Device orientation
 function registerDeviceOrientation() {
     if (window.DeviceOrientationEvent) {
         window.addEventListener("deviceorientation", function (event) {
-            // alpha: rotation around z-axis
+            // alpha: rotation around -> z-axis
             var alpha = event.alpha;
-            // gamma: left to right - y
+            // gamma: left to right -> y
             var gamma = event.gamma;
-            // beta: front back motion - x
+            // beta: front back motion -> x
             var beta = event.beta;
             var absolute = event.absolute;
-            //var webkitCompassHeading = event.webkitCompassHeading;
-            //var webkitCompassAccuracy = event.webkitCompassAccuracy;
+
+            var euler = new THREE.Euler();
+            var quat = new THREE.Quaternion();
+
+            //const x = THREE.MathUtils.degToRad(beta); // x
+            //const z = THREE.MathUtils.degToRad(-alpha); // -z
+            //const y = THREE.MathUtils.degToRad(gamma); // y
+
+            euler.set(beta, gamma, alpha, "XYZ");
+            quat.setFromEuler(euler);
+
             //var quaternionConverted = Quaternion.fromEuler(beta * rad, gamma * rad, alpha * rad, 'XYZ');
             //console.log(quaternionConverted.toString());
-            handleOrientationEvent(beta, gamma, alpha);
+            //handleOrientationEvent(beta, gamma, alpha, w);
+            handleOrientationEvent(quat.x, quat.y, quat.z, quat.w);
         }, true);
     }
 
-    var handleOrientationEvent = function (beta, gamma, alpha) {
+    var handleOrientationEvent = function (beta, gamma, alpha, w) {
         // do something amazing
         //const msg = `${alpha.toString()},${gamma.toString()},${beta.toString()},${adsolute.toString()},${webkitCompassHeading.toString()},${webkitCompassAccuracy.toString()},${quaternionConverted.x.toString()},${quaternionConverted.y.toString()},${quaternionConverted.z.toString()},${quaternionConverted.w.toString()}`;
-        const msg = `${alpha.toString()},${gamma.toString()},${beta.toString()}`;
+        const msg = `${alpha.toString()},${gamma.toString()},${beta.toString()},${w.toString()}`;
         unityInstance.SendMessage("Gyroscope", "Handle_DeviceOrientation", msg);
     };
-
 }
+
+// Device orientation change
+function registerOrientationEvents() {
+    console.log("registerOrientationEvents");
+    window.addEventListener("orientationchange", onScreenOrientationChange);
+    window.addEventListener("deviceorientation", onOrientationChange, true);
+
+    const qt = new THREE.Quaternion();
+    const _qt = new THREE.Quaternion();
+    const _q0 = new THREE.Quaternion();
+    const _q1 = new THREE.Quaternion().setFromAxisAngle(
+        new THREE.Vector3(1, 0, 0),
+        -Math.PI / 2
+    ); // x軸-90度回転
+    const _zee = new THREE.Vector3(0, 0, 1);
+    const _euler = new THREE.Euler();
+    let initialQt; // キャリブレーション用
+    let screenOrientation = window.orientation || 0;
+
+    function onOrientationChange(e) {
+        const beta = THREE.MathUtils.degToRad(e.beta); // x
+        const alpha = THREE.MathUtils.degToRad(-e.alpha); // -z
+        const gamma = THREE.MathUtils.degToRad(e.gamma); // y
+        const orient = THREE.MathUtils.degToRad(screenOrientation);
+
+        // Set the euler angle with these values
+        _euler.set(beta, gamma, alpha, "XYZ");
+
+        // Convert into quaternion.
+        _qt.setFromEuler(_euler); // ①
+        //_qt.multiply(_q1); // ②
+        //_qt.multiply(_q0.setFromAxisAngle(_zee, -orient)); // ③
+        //if (initialQt) _qt.multiply(initialQt); // ④
+        //_qt.z *= -1; // ⑤
+
+        //// Calibration
+        //if (!initialQt) {
+        //    initialQt = _qt.clone().invert();
+        //}
+
+        //qt.copy(_qt);
+
+        handleOrientationEvent(_qt.x, _qt.y, _qt.z, _qt.w);
+        var handleOrientationEvent = function (x, y, z, w) {
+            // do something amazing
+            //const msg = `${alpha.toString()},${gamma.toString()},${beta.toString()},${adsolute.toString()},${webkitCompassHeading.toString()},${webkitCompassAccuracy.toString()},${quaternionConverted.x.toString()},${quaternionConverted.y.toString()},${quaternionConverted.z.toString()},${quaternionConverted.w.toString()}`;
+            const msg = `${z.toString()},${y.toString()},${x.toString()},${w.toString()}`;
+            unityInstance.SendMessage("Gyroscope", "Handle_DeviceOrientation", msg);
+        };
+    };
+
+    function onScreenOrientationChange() {
+        screenOrientation = window.orientation || 0;
+    };
+}
+
 //---Register functions
 
 function checkPermission(permissionName, descriptor) {
