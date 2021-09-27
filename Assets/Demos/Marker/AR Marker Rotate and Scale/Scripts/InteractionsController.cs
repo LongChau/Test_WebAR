@@ -25,17 +25,24 @@ namespace ARWT.Example{
 
 
                 if(!interaciting){
+                    // Start interacting. Run once at touching phase.
                     startPosition = t1.position - t0.position;
                     startDistance = Vector2.Distance(t1.position, t0.position);
                     interaciting = true;
                 }else{
+                    // When interacting...
+                    // Update the current position.
                     Vector2 currPosition = t1.position - t0.position;
+                    // Find the angle offset between start and current point.
                     float angleOffset = Vector2.Angle(startPosition, currPosition);
+                    // Check the perdincular vector to rotate the object later.
                     Vector3 cross = Vector3.Cross(startPosition, currPosition);
                     
+                    // Check the current angle with threshold.
                     if(angleOffset > angleTreshold){
                         startPosition = currPosition;
                         
+                        // Check perdincular vector to rotate.
                         if (cross.z > 0) {
                             transform.RotateAround(transform.position, transform.up, -angleOffset);
                         } else if (cross.z < 0) {
@@ -43,13 +50,14 @@ namespace ARWT.Example{
                         }
                     }
                     
-
+                    // check the distance to scale.
                     float currentDistance = Vector2.Distance(t1.position, t0.position);
                     float scalingAmount = (currentDistance - startDistance) * scaleMultiplier;
 
                     if(Mathf.Abs(scalingAmount) > Mathf.Abs(scaleTreshold)){
                         startDistance = currentDistance;
                         
+                        // Scale the object but does not "cross the line".
                         Vector3 newScale = new Vector3(
                             Mathf.Clamp(transform.localScale.x + scalingAmount, minScale, maxScale),
                             Mathf.Clamp(transform.localScale.y + scalingAmount, minScale, maxScale),
@@ -60,6 +68,7 @@ namespace ARWT.Example{
                 }
 
             }else{
+                // When there is no input. Stop the interaction.
                 interaciting = false;
             }
         }
