@@ -14,19 +14,19 @@ namespace ARWT.Marker{
         bool firstTime = true;
 
         void Start() {
-            //DetectionManager.onMarkerVisible += onMarkerVisible;
-            //DetectionManager.onMarkerLost += onMarkerLost;
+            DetectionManager.onMarkerVisible += onMarkerVisible;
+            DetectionManager.onMarkerLost += onMarkerLost;
         }
 
-        public void FakeMarkerVisible(MarkerInfo m)
-        {
-            onMarkerVisible(m);
-        }
+        //public void FakeMarkerVisible(MarkerInfo m)
+        //{
+        //    onMarkerVisible(m);
+        //}
 
-        public void FakeMarkerLost(MarkerInfo m)
-        {
-            onMarkerLost(m);
-        }
+        //public void FakeMarkerLost(MarkerInfo m)
+        //{
+        //    onMarkerLost(m);
+        //}
 
         void onMarkerVisible(MarkerInfo m){
             if(m.name == markerToListen){

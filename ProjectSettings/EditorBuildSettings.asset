@@ -11,7 +11,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Demos/Marker/AR Crash Bandicoot/AR Crash Bandicoot.unity
     guid: b7376c26899f01c4ab663716bb6386e7
-  - enabled: 1
+  - enabled: 0
     path: Assets/_MyProject/Scene/TestCam.unity
     guid: ab05406be04e1834fa23485b1c20d123
+  - enabled: 1
+    path: Assets/_MyProject/Scene/Test_Marker.unity
+    guid: 39b9245bed818e248b2eb317d394d360
   m_configObjects: {}

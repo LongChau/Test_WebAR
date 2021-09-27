@@ -15,9 +15,12 @@ namespace ARWT.Example{
         bool interaciting = false;
 
         void Update() {
+            // Only active when there is 2 touch count.
             if(Input.touchCount == 2){
 
+                // get first touch.
                 var t0 = Input.GetTouch(0);
+                // get second touch.
                 var t1 = Input.GetTouch(1);
 
 

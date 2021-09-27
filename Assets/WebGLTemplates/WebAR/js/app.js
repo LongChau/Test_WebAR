@@ -13,8 +13,8 @@ var scene = new THREE.Scene();
 //var quatConverted = Quaternion.fromEuler(45, 60, 20, 'XYZ');
 //console.log(quatConverted.toString());
 
-var test = THREE.MathUtils.degToRad(90);
-console.log(test.toString());
+//var test = THREE.MathUtils.degToRad(90);
+//console.log(test.toString());
 
 function createSimpleCube() {
     console.log("createSimpleCube()");
