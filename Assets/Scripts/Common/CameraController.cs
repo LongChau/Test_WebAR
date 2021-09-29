@@ -36,7 +36,7 @@ namespace ARWT.Core{
                 print("aspect : " + cam.aspect);
             }
 
-            txtCamInfo.SetText($"Cam pos: {transform.position}, rot: {transform.rotation}");
+            txtCamInfo?.SetText($"Cam pos: {transform.position}, rot: {transform.rotation}");
         }
 
 
